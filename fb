@@ -1,0 +1,645 @@
+#include<bits/stdc++.h>
+using namespace std;
+int mod(int n){
+    if(n>=0) return n%5;
+    return n%5+5;
+}
+string encrpt_decrypt(map<char,int> m1,map<int,char> m2,string text,int n,int op){
+    int temp1,temp2,frow,fcol,srow,scol,temp;
+    string cipher="";
+    for(int i=0;i<n;i+=2){
+        temp1=m1[text[i]];
+        temp2=m1[text[i+1]];
+        frow=temp1/5;
+        fcol=temp1%5;
+        srow=temp2/5;
+        scol=temp2%5;
+        if(frow==srow){
+            fcol=mod(fcol+op);
+            scol=mod(scol+op);
+        }
+        else if(fcol==scol){
+            frow=mod(frow+op);
+            srow=mod(srow+op);
+        }
+        else{
+            swap(fcol,scol); 
+        }
+        cipher=cipher+m2[frow*5+fcol]+m2[srow*5+scol];
+    }
+return cipher;
+}
+int main(){
+    string key;
+    cout<<"Enter key : ";
+    cin>>key;
+    int n=key.length();
+    int i,c=0;
+    map<char,int> m1;
+    map<int,char> m2;
+    for(i=0;i<n;i++){
+        if(isupper(key[i]))
+        key[i]=key[i]+32;
+        if(key[i]=='j')
+        key[i]='i';
+        if(!m1.count(key[i]))
+        {
+            m1[key[i]]=c;
+            m2[c]=key[i];
+            c=c+1;
+        }
+    }
+    for(char ch='a';ch<='z';ch++){
+        if(ch!='j' and !m1.count(ch))
+        {
+            m1[ch]=c;
+            m2[c]=ch;
+            c=c+1;
+        }
+    }
+    string plaintext,processed_plaintext;
+    cout<<endl<<"Enter plaintext : ";
+    getchar();
+    getline(cin,plaintext);
+    n=plaintext.length();
+    for(i=0;i<n;i++){
+        if(isalpha(plaintext[i])){
+            if(isupper(plaintext[i])) 
+            plaintext[i]=plaintext[i]+32;
+
+            if(plaintext[i]==processed_plaintext.back())
+            processed_plaintext+='x';
+
+            processed_plaintext+=plaintext[i];
+        }
+    }
+    if(processed_plaintext.length()%2==1) 
+    processed_plaintext+='x';
+    n=processed_plaintext.length();
+    string enc_text=encrpt_decrypt(m1,m2,processed_plaintext,n,1);
+    cout<<endl<<"Encrypted text : "<<enc_text<<endl;
+    string dec_text=encrpt_decrypt(m1,m2,enc_text,n,-1);
+    cout<<endl<<"Decrypted text : "<<dec_text<<endl;
+    plaintext="";
+    n=dec_text.length();
+    plaintext=dec_text[0];
+    for(i=1;i<n-1;i++){
+        if(!(dec_text[i]=='x' and dec_text[i-1]==dec_text[i+1]))
+        plaintext+=dec_text[i];
+    }
+    if(dec_text[n-1]!='x')
+    plaintext+=dec_text[i];   
+    cout<<endl<<"Final plaintext : "<<plaintext<<endl<<endl;
+    return 0;
+}
+
+2. 
+
+#include<bits/stdc++.h>
+using namespace std;
+int modulo(int n){
+	if(n>=0) return n%26;
+	return (n%26)+26;
+}
+int gcd(int a,int b){
+	if(b==0) return a;
+	return gcd(b,a%b);
+}
+int gcd1(int a,int b,int p,int q){
+	if(b==0) return modulo(p);
+	return gcd1(b,a%b,q,p-(a/b)*q);
+}
+int det(int a[3][3],int n){
+	if(n==2)
+	return modulo(a[0][0]*a[1][1]-a[0][1]*a[1][0]);
+	return modulo(a[0][0]*(a[1][1]*a[2][2]-a[1][2]*a[2][1])-a[0][1]*(a[1][0]*a[2][2]-a[1][2]*a[2][0])+a[0][2]*(a[1][0]*a[2][1]-a[1][1]*a[2][0]));
+}
+void inverse(int a[3][3],int inv[3][3],int n,int mul_inv){
+	if(n==2){
+		inv[0][0]=modulo(a[1][1]*mul_inv);
+		inv[1][1]=modulo(a[0][0]*mul_inv);
+		inv[0][1]=modulo(-a[0][1]*mul_inv);
+		inv[1][0]=modulo(-a[1][0]*mul_inv);
+	}
+	else{
+		int i,j,temp;
+		inv[0][0]=modulo((a[1][1]*a[2][2]-a[1][2]*a[2][1])*mul_inv);
+		inv[0][1]=modulo(-(a[1][0]*a[2][2]-a[1][2]*a[2][0])*mul_inv);
+		inv[0][2]=modulo((a[1][0]*a[2][1]-a[1][1]*a[2][0])*mul_inv);
+		inv[1][0]=modulo(-(a[0][1]*a[2][2]-a[0][2]*a[2][1])*mul_inv);
+		inv[1][1]=modulo((a[0][0]*a[2][2]-a[0][2]*a[2][0])*mul_inv);
+		inv[1][2]=modulo(-(a[0][0]*a[2][1]-a[0][1]*a[2][0])*mul_inv);
+		inv[2][0]=modulo((a[0][1]*a[1][2]-a[0][2]*a[1][1])*mul_inv);
+		inv[2][1]=modulo(-(a[0][0]*a[1][2]-a[0][2]*a[1][0])*mul_inv);
+		inv[2][2]=modulo((a[0][0]*a[1][1]-a[0][1]*a[1][0])*mul_inv);
+		for(i=0;i<3;i++)
+		for(j=0;j<i;j++){
+		temp=inv[i][j];
+		inv[i][j]=inv[j][i];
+		inv[j][i]=temp;
+		}
+	}
+}
+void mat_mul(int mat[100][3],int res[100][3],int a[3][3],int row,int n){
+	int i,j,k;
+	for(i=0;i<row;i++){
+		for(j=0;j<n;j++){
+		res[i][j]=0;
+		for(k=0;k<n;k++)
+		res[i][j]+=mat[i][k]*a[k][j];
+		res[i][j]=modulo(res[i][j]);
+		}
+	}
+}
+int main(){
+int n,i,j;
+cout<<"Enter a number for key matrix\n";
+cin>>n;
+int a[3][3],inv[3][3];
+cout<<"Enter a key matrix\n";
+for(i=0;i<n;i++){
+	for(j=0;j<n;j++){
+		cin>>a[i][j];
+	}
+}
+int dt=det(a,n);
+if(dt!=0 and gcd(dt,26)==1){
+	int mul_inv=gcd1(26,dt,0,1);
+	inverse(a,inv,n,mul_inv);
+	cout<<"Inverse matrix\n";
+	for(i=0;i<n;i++){
+	for(j=0;j<n;j++){
+		cout<<inv[i][j]<<" ";
+	}
+	cout<<endl;
+	}
+	cout<<endl;
+	string s;
+	cout<<"Enter string\n";
+	cin>>s;
+	cout<<endl;
+	while(s.length()%n!=0){
+		s+="x";
+	}
+	int len=s.length();
+	map<int,char> m;
+	int row=len/n;
+	int mat[100][3],res[100][3],dec[100][3];
+	int y=0;
+	for(i=0;i<len;i++){
+		mat[i/n][i%n]=s[i]-97;
+	}
+	mat_mul(mat,res,a,row,n);
+	cout<<"Encrypted String : ";
+	for(i=0;i<row;i++){
+	for(j=0;j<n;j++){
+		cout<<char(res[i][j]+97);
+	}
+	}
+	cout<<endl;
+	cout<<"Decrypted String : ";
+	mat_mul(res,dec,inv,row,n);
+	for(i=0;i<row;i++){
+	for(j=0;j<n;j++){
+		cout<<char(dec[i][j]+97);
+	}
+	}
+	cout<<endl;
+}
+return 0;
+}
+
+3. #include<bits/stdc++.h>
+using namespace std;
+int main(){
+ srand(time(NULL));
+ int i,n;
+ string plaintext;
+ cout<<"Enter plaintext : ";
+ cin>>plaintext;
+ set<char> s;
+ string org="";
+ n=plaintext.length();
+ for(i=0;i<n;i++){
+ if(!s.count(plaintext[i])){
+ org+=plaintext[i];
+ s.insert(plaintext[i]);
+ }
+ }
+ string dup=org;
+ n=org.length();
+ for(i=0;i<n;i++){
+ int c=rand()%n;
+ char ch=dup[i];
+ dup[i]=dup[c];
+ dup[c]=ch;
+ }
+ map<char,char> m;
+ for(i=0;i<n;i++){
+ m[org[i]]=dup[i];
+ }
+ string cipher="";
+ map<char,int> freq;
+ n=plaintext.length();
+ for(i=0;i<n;i++){
+ cipher+=m[plaintext[i]];
+ freq[plaintext[i]]+=1;
+ }
+ cout<<endl<<"String with unique alphabets : "<<org<<endl<<endl;
+ cout<<"Random string : "<<dup<<endl<<endl;
+ cout<<"Encrypted String : "<<cipher<<endl<<endl;
+ cout<<"freq\tplain\tcipher"<<endl;
+ for(i=0;i<n;i++){
+ cout<<float(freq[plaintext[i]])/n<<"\t"<<plaintext[i]<<"\t"<<cipher[i]<<endl;
+ }
+ return 0;
+}
+
+4.
+
+#include<bits/stdc++.h>
+using namespace std;
+void display(char mat[10][10],int rows,int cols){
+    for(int i=0;i<rows;i++)
+    {
+        for(int j=0;j<cols;j++)
+        cout<<mat[i][j]<<" ";
+        cout<<endl;
+    }
+}
+string encrpyt(string text,string key,int n,int cols){
+    int i,j,cur_col;
+    int rows=n/cols;
+    char mat[10][10];
+    
+    for(i=0;i<n;i++)
+        mat[i/cols][i%cols]=text[i];
+    
+    display(mat,rows,cols);
+
+    string cipher="";
+
+    for(i=0;i<cols;i++){ 
+        cur_col=key.find(i+'1');
+        for(j=0;j<rows;j++){
+            cipher+=mat[j][cur_col];
+        }
+    }
+    return cipher;
+}
+string decrypt(string text,string key,int n,int cols){
+    int i,j;
+    int rows=n/cols;
+    char mat[10][10];
+
+    for(i=0;i<n;i++)
+        mat[i%rows][i/rows]=text[i]; 
+
+    display(mat,rows,cols);
+
+    string cipher="";
+
+    for(i=0;i<rows;i++){ 
+        for(j=0;j<cols;j++){
+            cipher+=mat[i][key[j]-'1'];
+        }
+    }
+    return cipher;
+}
+int main(){
+    string key,plaintext;
+    cout<<"Enter plaintext : ";
+    cin>>plaintext;
+    cout<<"Enter key : ";
+    cin>>key;
+    int cols=key.length();
+    while(plaintext.length()%cols!=0)
+    plaintext+="x";
+
+    int n=plaintext.length();
+    cout<<endl<<"Encrypted matrix : "<<endl;
+    string enc_text=encrpyt(plaintext,key,n,cols);
+    cout<<endl<<"Encrypted text : "<<enc_text<<endl;
+
+    cout<<endl<<"Decrypted matrix : "<<endl;
+    string dec_text=decrypt(enc_text,key,n,cols);
+    cout<<endl<<"Decrypted text : "<<dec_text<<endl;    
+    return 0;
+}
+
+5.
+
+#include<bits/stdc++.h>
+using namespace std;
+
+int permute_one[]= {57, 49, 41, 33, 25, 17, 9 ,
+		1 , 58, 50, 42, 34, 26, 18,
+		10, 2 , 59, 51, 43, 35, 27,
+		19, 11, 3 , 60, 52, 44, 36,
+		63, 55, 47, 39, 31, 23, 15,
+		7 , 62, 54, 46, 38, 30, 22,
+		14, 6 , 61, 53, 45, 37, 29,
+		21, 13, 5 , 28, 20, 12, 4 };
+int permute_two[] = {14, 17, 11, 24, 1 , 5 , 3 , 28,
+		15, 6 , 21, 10, 23, 19, 12, 4 ,
+		26, 8 , 16, 7 , 27, 20, 13, 2 ,
+		41, 52, 31, 37, 47, 55, 30, 40,
+		51, 45, 33, 48, 44, 49, 39, 56,
+		34, 53, 46, 42, 50, 36, 29, 32 };
+
+int leftshiftTable[]={1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1};
+
+string leftshift(string text,int n){
+	return text.substr(n,text.length()-n)+text.substr(0,n);
+}
+
+string firstPermute(string key){
+	string res="";
+	for(int i=0;i<56;i++)
+	res+=key[permute_one[i]-1];
+	return res;
+}
+string secondPermute(string key){
+	string res="";
+	for(int i=0;i<48;i++)
+	res+=key[permute_two[i]-1];
+	return res;
+}
+void gen_keys(string left,string right){
+	string key;
+	for(int i=0;i<16;i++){
+		left=leftshift(left,leftshiftTable[i]);
+		right=leftshift(right,leftshiftTable[i]);
+		key=secondPermute(left+right);
+		
+		//cout<<"key "<<i+1<<" : "<<key<<endl;
+		cout<<key<<endl;
+	}
+}
+int main(){
+	unsigned long long key;
+	cout<<endl<<"Enter 64 bit key in hexadecimal 16 digits : ";
+	cin>>hex>>key;
+	string binarykey=bitset<64>(key).to_string();
+	cout<<endl<<"Binary key : "<<binarykey<<endl;
+	
+	binarykey=firstPermute(binarykey);
+	
+	cout<<endl<<"PC-1 key (k+) : "<<binarykey<<endl<<endl;
+	gen_keys(binarykey.substr(0,28),binarykey.substr(28,28));
+	
+	
+	return 0;
+}
+
+6. i.
+
+#include<bits/stdc++.h>
+usingnamespacestd;
+intE[]={
+
+32,1,2,3,4,5,
+4,5,6,7,8,9,
+8,9,10,11,12,13,
+12,13,14,15,16,17,
+16,17,18,19,20,21,
+20,21,22,23,24,25,
+24,25,26,27,28,29,
+28,29,30,31,32,1};
+
+stringexpansionPermute(stringinput)
+{
+stringres="";
+for(inti=0;i<48;i++)
+{
+res+=input[E[i]-1];
+}
+returnres;
+}
+stringXOR(stringinput1,stringinput2)
+{
+stringres="";
+for(inti=0;i<input1.length();i++)
+{
+res+=(input1[i]==input2[i])?"0":"1";
+}
+returnres;
+}
+intmain()
+{
+inti;
+unsignedlonglonghexInput;
+stringKi;
+ifstreamfin;
+cout<<"\nEnterRoundnumber(i):";
+cin>>i;
+cout<<"Enter64-bit(i-1)throundoutputinhex:";
+cin>>hex>>hexInput;
+stringinput=bitset<64>(hexInput).to_string();
+fin.open("keygen.txt");
+for(intj=1;j<=i;j++)
+{
+fin>>Ki;
+}
+if(Ki.length()==0)
+{
+cout<<"\nkeygen.txtnotfound!!!\n"<<endl;
+exit(1);
+}
+cout<<"\n64-bitBinaryInput="<<input<<endl;
+cout<<"keyforithround(Ki)="<<Ki<<endl;
+stringRi_1=input.substr(32,32);//32bitRighthalfofinputR[i-1]
+cout<<"\nRighthalfof64-bitinput,Ri_1="<<Ri_1<<endl;
+stringR48=expansionPermute(Ri_1);
+cout<<"Ri_1afterexpansionpermutation="<<R48<<endl;
+stringsBoxInput=XOR(R48,Ki);
+cout<<"\nInputtos-box:"<<sBoxInput<<endl<<endl;
+return0;
+}
+
+
+6. ii.
+
+#include<bits/stdc++.h>
+usingnamespacestd;
+unsignedintsBoxes[8][64]={
+{14,4,13,1,2,15,11,8,3,10,6,12,5,9,0,7,
+0,15,7,4,14,2,13,1,10,6,12,11,9,5,3,8,
+4,1,14,8,13,6,2,11,15,12,9,7,3,10,5,0,
+15,12,8,2,4,9,1,7,5,11,3,14,10,0,6,13},
+{15,1,8,14,6,11,3,4,9,7,2,13,12,0,5,10,
+3,13,4,7,15,2,8,14,12,0,1,10,6,9,11,5,
+0,14,7,11,10,4,13,1,5,8,12,6,9,3,2,15,
+13,8,10,1,3,15,4,2,11,6,7,12,0,5,14,9},
+{10,0,9,14,6,3,15,5,1,13,12,7,11,4,2,8,
+13,7,0,9,3,4,6,10,2,8,5,14,12,11,15,1,
+13,6,4,9,8,15,3,0,11,1,2,12,5,10,14,7,
+1,10,13,0,6,9,8,7,4,15,14,3,11,5,2,12},
+{7,13,14,3,0,6,9,10,1,2,8,5,11,12,4,15,
+13,8,11,5,6,15,0,3,4,7,2,12,1,10,14,9,
+10,6,9,0,12,11,7,13,15,1,3,14,5,2,8,4,
+3,15,0,6,10,1,13,8,9,4,5,11,12,7,2,14},
+{2,12,4,1,7,10,11,6,8,5,3,15,13,0,14,9,
+14,11,2,12,4,7,13,1,5,0,15,10,3,9,8,6,
+4,2,1,11,10,13,7,8,15,9,12,5,6,3,0,14,
+11,8,12,7,1,14,2,13,6,15,0,9,10,4,5,3},
+{12,1,10,15,9,2,6,8,0,13,3,4,14,7,5,11,
+10,15,4,2,7,12,9,5,6,1,13,14,0,11,3,8,
+9,14,15,5,2,8,12,3,7,0,4,10,1,13,11,6,
+4,3,2,12,9,5,15,10,11,14,1,7,6,0,8,13,},
+{4,11,2,14,15,0,8,13,3,12,9,7,5,10,6,1,
+13,0,11,7,4,9,1,10,14,3,5,12,2,15,8,6,
+1,4,11,13,12,3,7,14,10,15,6,8,0,5,9,2,
+6,11,13,8,1,4,10,7,9,5,0,15,14,2,3,12},
+{13,2,8,4,6,15,11,1,10,9,3,14,5,0,12,7,
+1,15,13,8,10,3,7,4,12,5,6,11,0,14,9,2,
+7,11,4,1,9,12,14,2,0,6,10,13,15,3,5,8,
+2,1,14,7,4,10,8,13,15,12,9,0,3,5,6,11}
+};
+intpermTable[]={
+16,7,20,21,29,12,28,17,
+1,15,23,26,5,18,31,10,
+2,8,24,14,32,27,3,9,
+19,13,30,6,22,11,4,25};
+stringsubstitution(stringinput)
+{
+stringres="";//tostorefinals-boxoutput
+for(inti=0;i<8;i++)
+{
+stringsInput=input.substr(6*i,6);
+introw=bitset<2>(sInput.substr(0,1)+ sInput.substr(5,1)
+
+).to_ulong();
+
+intcol=bitset<4>(sInput.substr(1,4)).to_ulong();
+res+=bitset<4>(sBoxes[i][row*16+col]).to_string();
+}
+returnres;
+}
+stringpermute(stringinput)
+{
+stringres="";
+for(inti=0;i<32;i++)
+{
+res+=input[permTable[i]-1];
+}
+returnres;
+}
+stringXOR(stringinput1,stringinput2)
+{
+stringres="";
+for(inti=0;i<input1.length();i++)
+{
+res+=(input1[i]==input2[i])?"0":"1";
+}
+returnres;
+}
+intmain()
+{
+unsignedlonglonghexSBoxInput,hexInput;
+cout<<"\nEnter48-bitinputforS-Boxinhex(12-digits):";
+cin>>hex>>hexSBoxInput;
+cout<<"Enter64-bit(i-1)throundoutputinhex(16-digits):";
+cin>>hex>>hexInput;
+stringsBoxinput=bitset<48>(hexSBoxInput).to_string();
+cout<<"\nS-BoxInput:"<<sBoxinput<<endl;
+stringinput=bitset<64>(hexInput).to_string();
+cout<<"Round(i-1)output:"<<input<<endl;
+stringLi_1=input.substr(0,32);
+cout<<"\nLi_1:"<<Li_1<<endl;
+stringsBoxOutput=substitution(sBoxinput);
+cout<<"\nS-Boxoutput="<<sBoxOutput<<endl;
+stringP=permute(sBoxOutput);
+cout<<"Permutedoutput="<<P<<endl;
+stringRi=XOR(P,Li_1);
+cout<<"\nOutputofithround(Ri)="<<Ri<<endl<<endl;
+return0;
+}
+
+
+7. 
+
+#include <bits/stdc++.h>
+using namespace std;
+unsigned long long sbox[16][16] = {
+    { 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76 },
+    { 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0 },
+    { 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15 },
+    { 0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75 },
+    { 0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84 },
+    { 0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf },
+    { 0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8 },
+    { 0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2 },
+    { 0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73 },
+    { 0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb },
+    { 0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79 },
+    { 0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08 },
+    { 0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a },
+    { 0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e },
+    { 0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf },
+    { 0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 }
+};
+unsigned long long Rcon[10] = {
+    0x01000000, 0x02000000, 0x04000000,
+    0x08000000, 0x10000000, 0x20000000, 0x40000000,
+    0x80000000, 0x1b000000, 0x36000000
+};
+string w[44];
+string rotLeft(string word){
+    return word.substr(8) + word.substr(0,8);
+}
+string SBoxFun(string word){
+    string res = "";
+    for(int i=0; i<4; i++){
+        string byte = word.substr(i*8, 8);
+        int row = bitset<4>( byte.substr(0,4) ).to_ulong();
+        int col = bitset<4>( byte.substr(4,4) ).to_ulong();
+        res += bitset<8>(sbox[row][col]).to_string();
+    }
+    return res;
+}
+string XOR(string x, string y){
+    string res = "";
+    for(int i=0; i<x.length(); i++)
+    {
+        res += (x[i] == y[i]) ? "0" : "1";
+    }
+    return res;
+}
+int main(){
+    unsigned long long hexkey1, hexkey2;
+    cout << "\nEnter first 64-bit key in hexadecimal(16-digits) : " ;
+    cin >> hex >> hexkey1;
+    cout << "\nEnter next 64-bit key in hexadecimal(16-digits) : " ;
+    cin >> hex >> hexkey2;
+    string key = bitset<64>(hexkey1).to_string() + bitset<64>(hexkey2).to_string();
+    cout << "Binary key (k) \t: " << key << endl;
+    cout << "keyLen : " << key.length() << endl;
+    for(int i=0; i<4; i++){
+        w[i] = key.substr(i*32,32);
+    }
+    for(int i=4; i<44; i++){
+            string first = w[i-4];
+            string second = w[i-1];
+            if(i % 4 == 0){
+                second = rotLeft(second);
+                second = SBoxFun(second);
+                string tmp = bitset<32>(Rcon[i/4-1]).to_string();
+                second = XOR(second, tmp);
+            }
+        w[i] = XOR(first, second);
+    }
+    string keys[11] = {""};
+    for(int i=0; i<44; i++){
+        keys[i/4] += w[i];
+    }
+    for(int i=0; i<11; i++){
+        for(int j=0; j<16;j++){
+            cout << setfill('0') <<setw(2)<<hex<<bitset<8>(keys[i].substr(j*8,8)).to_ulong() <<" "; 
+        }
+        cout <<endl;
+    }
+    return 0;
+}
+
+8. 
